@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
-import { CiHome, CiSearch } from "react-icons/ci";
+import { CiHome, CiLogin, CiSearch } from "react-icons/ci";
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Run } from "@/actions/phones";
 const name = [
   {
     id: "Samsung",
@@ -105,15 +106,10 @@ const bettery = [
     id: 4000,
     label: "4000 mAh",
   },
-
-  {
-    id: 5001,
-    label: "5001 mAh",
-  },
 ] as const;
 
 export default function Home() {
-  const [array, setArray] = useState([{ lol: "lol" }]);
+  const [array, setArray] = useState();
   const [isPending, StartTransition] = useTransition();
   const [search, setSearch] = useState("");
 
@@ -121,31 +117,44 @@ export default function Home() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: ["Samsung"],
-      max_price: 2000,
+      max_price: "20000",
       bettery: [5000],
-      storage: [128],
+      storage: [64],
       rating_score: true,
     },
   });
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const data = values;
+    const criteria = {
+      name: data.name?.[0],
+      storage: data.storage?.[0],
+      battery: data.bettery[0],
+      max_price: parseInt(data.max_price),
+      min_price: null,
+      rating_score: data.rating_score,
+    };
+    console.log(criteria);
     StartTransition(() => {
-      fetch("/api/v1/phones", {
+      fetch("http://localhost:5000/search_phones", {
         method: "POST",
         headers: {
-          ContentType: "application/json",
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(criteria),
       })
-        .then((res) => res.json())
-        .then((res) => console.log(res));
+        .then((response) => response.json())
+        .then((data) => {
+          // Handle the response data (the list of recommended phones)
+          setArray(data);
+          console.log({ data });
+          // Update your UI here
+        });
     });
 
-    console.log(search);
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
   }
   return (
     <main className=" h-full">
@@ -163,10 +172,41 @@ export default function Home() {
                 setSearch(e.currentTarget.value);
               }}
             />
-            <CiSearch className="absolute right-0 size-7 top-1 bg-pink-300 w-14 mr-2 rounded-md " />
+            <div
+              onClick={(e) => {
+                e.preventDefault();
+                fetch("http://localhost:5000/search_phones", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    name: search,
+                    storage: null,
+                    battery: null,
+                    max_price: null,
+                    min_price: null,
+                    rating_score: "top",
+                  }),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    // Handle the response data (the list of recommended phones)
+                    setArray(data);
+                    console.log({ data });
+                    // Update your UI here
+                  });
+              }}
+            >
+              <CiSearch className="absolute right-0 size-7 top-1 bg-pink-300 w-14 mr-2 rounded-md " />
+            </div>
           </div>
         </div>
-        <div>
+        <div className="flex space-x-3">
+          <div className="flex flex-row items-center ">
+            <CiLogin className="size-8" />
+            <Link href="/">Login</Link>
+          </div>
           <div className="flex flex-row items-center ">
             <CiHome className="size-8" />
             <Link href="/">Home</Link>
@@ -225,7 +265,6 @@ export default function Home() {
                     <FormControl>
                       <Input
                         disabled={isPending}
-                        
                         className="border border-gray-400"
                         placeholder="50000"
                         {...field}
@@ -335,6 +374,11 @@ export default function Home() {
           </Form>
         </div>
         <div className="">{array?.[0] && <ProductPage array={array} />}</div>
+        {!array?.[0] && (
+          <div className="flex h-screen items-center justify-center w-[80%] ">
+            Please Search or Submit
+          </div>
+        )}
       </div>
     </main>
   );
