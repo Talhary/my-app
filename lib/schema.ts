@@ -17,6 +17,10 @@ export const formSchema = z.object({
     .string()
     .min(0, { message: "Number must be non-negative" })
     .max(99999, { message: "Number length cannot exceed 5 digits" }),
+  min_price: z
+    .string()
+    .min(0, { message: "Number must be non-negative" })
+    .max(99999, { message: "Number length cannot exceed 5 digits" }),
   storage: z.array(z.number()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one item.",
   }),

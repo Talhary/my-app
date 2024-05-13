@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
-import { CiHome, CiLogin, CiSearch } from "react-icons/ci";
+import { CiHome, CiLogin, CiMenuBurger, CiSearch } from "react-icons/ci";
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +29,23 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Run } from "@/actions/phones";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DropDownMenu } from "./_components/dropDown-menu";
+import { DropdownFilter } from "./_components/dropDown-filter";
+import { ThemeChange } from "./_components/theme";
 const name = [
   {
     id: "Samsung",
@@ -118,13 +135,13 @@ export default function Home() {
     defaultValues: {
       name: ["Samsung"],
       max_price: "20000",
+      min_price: "2000",
       bettery: [5000],
       storage: [64],
       rating_score: true,
     },
   });
 
-  // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
     const data = values;
     const criteria = {
@@ -132,7 +149,7 @@ export default function Home() {
       storage: data.storage?.[0],
       battery: data.bettery[0],
       max_price: parseInt(data.max_price),
-      min_price: null,
+      min_price: parseInt(data.min_price),
       rating_score: data.rating_score,
     };
     console.log(criteria);
@@ -146,28 +163,24 @@ export default function Home() {
       })
         .then((response) => response.json())
         .then((data) => {
-          // Handle the response data (the list of recommended phones)
           setArray(data);
           console.log({ data });
-          // Update your UI here
         });
     });
-
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
   }
   return (
-    <main className=" h-full">
-      <nav className=" h-20  bg-pink-400 flex flex-row justify-between px-10 gap-4 items-center">
+    <main className="min-w-[320px] h-full bg-gray-500">
+      <nav className="max-md:hidden h-20  text-white bg-gray-900 flex flex-row justify-between px-10 gap-4 items-center">
         <div>
-          <h2 className="text-4xl">Daraz</h2>
+          <h2 className="text-4xl">Shoaib Ahmed</h2>
         </div>
+
         <div>
           <div className=" w-[500px] bg-white rounded-xl flex relative">
             <Input
               type="text"
               placeholder="samsung"
-              className="rounded-xl"
+              className="rounded-xl text-black"
               onChangeCapture={(e) => {
                 setSearch(e.currentTarget.value);
               }}
@@ -198,7 +211,7 @@ export default function Home() {
                   });
               }}
             >
-              <CiSearch className="absolute right-0 size-7 top-1 bg-pink-300 w-14 mr-2 rounded-md " />
+              <CiSearch className="absolute right-0 size-7 top-1 bg-black w-14 mr-2 rounded-md " />
             </div>
           </div>
         </div>
@@ -210,11 +223,59 @@ export default function Home() {
           <div className="flex flex-row items-center ">
             <CiHome className="size-8" />
             <Link href="/">Home</Link>
+          </div>{" "}
+          <div className="flex flex-row items-center ">
+            <CiHome className="size-8" />
+            <Link href="/feedback">feed back</Link>
           </div>
         </div>
       </nav>
+      <nav className="md:hidden flex justify-center p-4 bg-black space-x-2">
+        <div className="bg-gray-400 md:hidden"></div>
+        <DropDownMenu />
+        <div className=" w-[50%] mx-5 bg-white rounded-xl flex relative">
+          <Input
+            type="text"
+            placeholder="samsung"
+            className="rounded-xl text-black"
+            onChangeCapture={(e) => {
+              setSearch(e.currentTarget.value);
+            }}
+          />
+          <div
+            className="hover:scale-[1.02] transition-all"
+            onClick={(e) => {
+              e.preventDefault();
+              fetch("http://localhost:5000/search_phones", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: search,
+                  storage: null,
+                  battery: null,
+                  max_price: null,
+                  min_price: null,
+                  rating_score: "top",
+                }),
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  // Handle the response data (the list of recommended phones)
+                  setArray(data);
+                  console.log({ data });
+                  // Update your UI here
+                });
+            }}
+          >
+            <CiSearch className="absolute right-0 size-7 top-1 bg-black text-white w-14 mr-2 rounded-md " />
+          </div>
+        </div>
+      </nav>
+
       <div className="flex  flex-row">
-        <div className="bg-gray-200 w-[300px] m-4 p-4">
+        <div className="bg-gray-400 max-md:hidden  text-white   w-[300px] m-4 p-4 min-w-[300px]">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2">
@@ -256,25 +317,53 @@ export default function Home() {
                 ))}
               </div>
 
-              <FormField
-                control={form.control}
-                name="max_price"
-                render={({ field }) => (
-                  <FormItem className="">
-                    <FormLabel className="text-[20px]">Price</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isPending}
-                        className="border border-gray-400"
-                        placeholder="50000"
-                        {...field}
-                      />
-                    </FormControl>
+              <div className="flex flex-col">
+                <div>
+                  <FormLabel className="text-[20px]"> Price</FormLabel>
+                </div>
+                <div className="flex-row flex gap-x-1">
+                  <FormField
+                    control={form.control}
+                    name="max_price"
+                    render={({ field }) => (
+                      <FormItem className="">
+                        <FormLabel className="">Max Price</FormLabel>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <FormControl>
+                          <Input
+                            disabled={isPending}
+                            className="border border-gray-400"
+                            placeholder="minimum"
+                            {...field}
+                          />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="min_price"
+                    render={({ field }) => (
+                      <FormItem className="">
+                        <FormLabel className=""> Min Price</FormLabel>
+
+                        <FormControl>
+                          <Input
+                            disabled={isPending}
+                            className="border border-gray-400"
+                            placeholder="maximum"
+                            {...field}
+                          />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <FormLabel className="text-[20px] ">Storage Capacity</FormLabel>
                 <div className="w-full bg-gray-400 h-[1px]"></div>
@@ -373,7 +462,10 @@ export default function Home() {
             </form>
           </Form>
         </div>
-        <div className="">{array?.[0] && <ProductPage array={array} />}</div>
+
+        <div className="p-4 ">
+          {array?.[0] && <ProductPage array={array} />}
+        </div>
         {!array?.[0] && (
           <div className="flex h-screen items-center justify-center w-[80%] ">
             Please Search or Submit
