@@ -7,6 +7,8 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import HoverComponent from "@/app/_components/hover";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 const Products = ({ array }: { array: any }) => {
   // console.log({ array });
   // console.log({ Phonedata });
@@ -39,6 +41,11 @@ const Products = ({ array }: { array: any }) => {
                   <span>RS. </span>
                   <span> {el.Price}</span>
                 </div>
+                <Button>
+                  <Link href={"/phone/" + el.Name.split(" ").join("_")}>
+                    Learn More
+                  </Link>
+                </Button>
               </div>
             </HoverCardTrigger>
             <HoverCardContent className="min-w-[400px]">

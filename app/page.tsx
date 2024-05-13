@@ -205,6 +205,7 @@ export default function Home() {
                   .then((response) => response.json())
                   .then((data) => {
                     // Handle the response data (the list of recommended phones)
+
                     setArray(data);
                     console.log({ data });
                     // Update your UI here

@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
+import Link from "next/link";
 export default function Component({ data }: { data: any }) {
+  console.log(data);
   // Destructure the data object
   const {
     Name,
@@ -104,7 +105,9 @@ export default function Component({ data }: { data: any }) {
         </div>
         {/* Render other properties similarly */}
       </div>
-      <Button size="lg">Buy Now</Button>
+      <Button size="lg">
+        <Link href={"/phone/" + Name.split(" ").join("_")}> Learn More</Link>
+      </Button>
     </Card>
   );
 }
